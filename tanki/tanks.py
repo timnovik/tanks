@@ -61,6 +61,7 @@ def rotate(object, direction):
     for d in ['up', 'down', 'left', 'right']:
         c.itemconfigure(object[d], state='hidden')
     c.itemconfigure(object[direction], state='normal')
+    object['direction'] = direction
 
 
 def move(object, dx, dy):
@@ -71,13 +72,12 @@ def move(object, dx, dy):
 
 def delete(object):
     for i in ['up', 'down', 'left', 'right']:
-        (c.delete(object[i])
-        pass
+        (c.delete(object[i]))
 
 
 def coords(object):
     x, y = c.coords(object['up'])
-    return x//12, y // 12
+    return int(x // block_width), int(y // block_height)
 
 
 def get_tank(x, y, direction):
@@ -122,15 +122,6 @@ def get_bullet(x, y, direction):
 my_tank = get_tank(6, 6, 'up')
 
 
-def loop():
-    for bullet in bullets:
-        x,y = coords(bullet)
-        if is_available(x, y):
-            move(bullet, 20)
-        pass
-    c.after(50, loop)
-
-
 # проверка доступности клетки
 def is_available(i, j):
     if i < 0 or i >= 12 or j < 0 or j >= 12:
@@ -140,7 +131,24 @@ def is_available(i, j):
     return True
 
 
-# нажатие клавишиццы
+def loop():
+    for bullet in bullets:
+        x, y = coords(bullet)
+        if is_available(x, y):
+            if bullet['direction'] == 'up':
+                move(bullet, 0, -20)
+            if bullet['direction'] == 'down':
+                move(bullet, 0, 20)
+            if bullet['direction'] == 'right':
+                move(bullet, 20, 0)
+            if bullet['direction'] == 'left':
+                move(bullet, -20, 0)
+        else:
+            delete(bullet)
+            bullets.remove(bullet)
+    c.after(50, loop)
+
+
 def keyDown(key):
     dx = 0
     dy = 0
@@ -162,16 +170,17 @@ def keyDown(key):
         if is_available(x, y + 1):
             dy = 1
     # обработка нажатий стрелочек на клавиатуре - стрельба
-    if key.keycode == 8320768:
+
+    if key.keycode == 38:
         rotate(my_tank, 'up')
         bullets.append(get_bullet(x, y, 'up'))
-    if key.keycode == 8255233:
+    if key.keycode == 40:
         rotate(my_tank, 'down')
         bullets.append(get_bullet(x, y, 'down'))
-    if key.keycode == 8189699:
+    if key.keycode == 39:
         rotate(my_tank, 'right')
         bullets.append(get_bullet(x, y, 'right'))
-    if key.keycode == 8124162:
+    if key.keycode == 37:
         rotate(my_tank, 'left')
         bullets.append(get_bullet(x, y, 'left'))
     move(my_tank, dx * block_width, dy * block_height)
